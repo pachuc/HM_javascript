@@ -155,26 +155,95 @@ class Player {
                 }
                 else{
 
-                        //calculate slope
+                        //coridor line:
                         var tan = Math.tan(this.theta);
                         var b = this.ypos - (this.xpos * tan);
 
-                        //first check agsint left and right walls for intersection
-                        //easier in my head since its x...'
-                        var yC = this.wmin * tan + b;
-                        var yC2 = this.wmax *tan + b;
-
-                        if(yC <= this.hmax && yC >= this.hmin && yC2 <= this.hmax && yC2 >= this.hmin){
-                            this.corridor = this.two.makeLine(this.wmin, yC, this.wmax, yC2);
+                        //find intersections walls.
+                        var LEFT, RIGHT, TOP, BOT = false;
+                        //LEFT WALL
+                        //x = wmin
+                        var pot_y = this.wmin * tan + b;
+                        //now, is this y within the bounds?
+                        if(pot_y >= this.hmin && pot_y <= this.hmax){
+                            LEFT = true;
                         }
-                        else{
-                            var xC = (this.hmin - b)/tan;
-                            var xC2 = (this.hmax - b)/tan;
-                            this.corridor = this.two.makeLine(xC, this.hmin, xC2, this.hmax);
+                        //RIGHT WALL
+                        //x = wmax
+                        var pot_y2 = this.wmax * tan + b;
+
+                        if(pot_y2 >= this.hmin && pot_y2 <= this.hmax){
+                            RIGHT = true;
+                        }
+
+                        //TOP WALL
+                        //y = hmin
+                        var pot_x = (this.hmin - b)/tan;
+
+                        if(pot_x >= this.wmin && pot_x <= this.wmax){
+                            TOP = true;
+                        }
+                        
+                        //BOTTOM WALL
+                        //y = hmax
+                        var pot_x2 = (this.hmax - b)/tan;
+
+                        if(pot_x2 >= this.wmin && pot_x2 <= this.wmax){
+                            BOT = true;
+                        }
+
+                        var x1 = 0;
+                        var x2 = 0;
+                        var y1 = 0;
+                        var y2 = 0;
+
+                        if(LEFT){
+                            x1 = this.wmin;
+                            y1 = pot_y;
+
+                            if(RIGHT){
+                                x2 = this.wmax;
+                                y2 = pot_y2;
+                            }
+                            else if(TOP){
+                                x2 = pot_x;
+                                y2 = this.hmin;
+                            }
+                            else if(BOT){
+                                x2 = pot_x2;
+                                y2 = this.hmax;
+
+                            }
+
+                        }
+                        else if(RIGHT){
+                            x1 = this.wmax;
+                            y1 = pot_y2;
+
+                            if(TOP){
+                                x2 = pot_x;
+                                y2 = this.hmin;
+
+                            }
+                            else if(BOT){
+                                x2 = pot_x2;
+                                y2 = this.hmax;
+
+                            }
+
+                        }
+                        else if(TOP){
+                            x1 = pot_x;
+                            y1 = this.hmin;
+
+                            x2 = pot_x2;
+                            y2 = this.hmax;
 
                         }
 
+                        this.corridor = this.two.makeLine(x1, y1, x2, y2);
                         this.corridor.stroke = this.color;
+
 
                 }
 
