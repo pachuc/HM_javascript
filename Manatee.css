@@ -42,7 +42,7 @@ body {
 #middle_pane{
 	float: left;
 	margin: 0;
-	background-color:yellow;
+	background-color: black;
 	width: 50%;
 	height:100%;
 	overflow: hidden;
