@@ -15,53 +15,210 @@ class Player {
          * @param  int size size of the player
          * @param  int speed speed of the player
          */
-        constructor(xpos, ypos, color, theta, size, speed){
+        constructor(xpos, ypos, color, theta, size, speed, two, hmin, hmax, wmin, wmax){
 	       
-                //player variables
-                this.xpos = xpos;
-                this.ypos = ypos;
-                this.color = color;
-                this.theta = theta;
-                this.size = size;
-                this.speed = speed;
-                this.numPoints = 3;
+            //player variables
+            this.xpos = xpos;
+            this.ypos = ypos;
+            this.color = color;
+            this.theta = theta;
+            this.size = size;
+            this.speed = speed;
+            this.numPoints = 3;
+            this.two = two;
+            this.hmin = hmin;
+            this.hmax = hmax;
+            this.wmin = wmin;
+            this.wmax = wmax;
+            this.init = false;
+            this.aim = false;
+            this.aimTheta = theta;
+            this.aimDir = "";
+
+            this.makeBody();
+            this.makeCorridor();
+
+            this.init = true;
+            this.aimrendered = false;
+            this.shoot = false;
+            this.shootcd = 0;
                 
 
-	}
+	   }
 
-        /**
-         * Update the player object
-         * @param  int tick number of game ticks
-         */
-        update(tick){
+       aimShot(){
+            if(this.aimDir == "clockwise"){
+                this.aimTheta -= .05;
+            }
 
-        	//move in the heading direction.
-        	var movement = this.speed * tick;
-        	this.xpos = movement * cos(this.theta) + this.xpos;
-        	this.ypos = movement * sin(this.theta) + this.ypos;
+            if(this.aimDir == "counterclockwise"){
+                this.aimTheta += .05;
+            }
 
-        	
-        }
+            this.drawAim();
+       }
 
-        /**
-         * Increment the number of sides i.e update the score.
-         */
+       clearAim(){
+            if(this.aimrendered){
+                this.two.remove(this.aimline);
+                this.aimrendered = false;
+            }
+       }
+
+       drawAim(){
+
+            if(this.aimrendered){
+                this.two.remove(this.aimline);
+            }
+
+            //calculate slope
+            var tan = Math.tan(this.aimTheta);
+            var b = this.ypos - (this.xpos * tan);
+
+            var x1 = this.xpos;
+            var x2 = this.xpos + this.size * 2 * Math.cos(this.aimTheta);
+            var y1 = this.ypos;
+            var y2 = this.ypos + this.size * 2 * Math.sin(this.aimTheta);
+
+            this.aimline = this.two.makeLine(x1, y1, x2, y2);
+            this.aimline.stroke = this.color;
+            this.aimrendered = true;
+
+
+
+       }
+
+       setShoot(){
+            this.shoot = true;
+       }
+
+       update(){
+
+            if(this.aim){
+
+                this.aimShot();
+                if(this.shoot){
+                    this.theta = this.aimTheta;
+                    this.shoot = false;
+                    this.shootcd = 100;
+                }
+
+            }
+            else{
+                this.clearAim();
+                this.aimTheta = this.theta;
+            }
+
+            if(this.shootcd > 0){
+                this.shootcd--;
+            }
+            
+            this.move();
+            this.makeCorridor();
+       }
+
+       setAim(isaim, aimdir){
+            this.aim = isaim;
+            this.aimDir = aimdir;
+       }
+
+       move(){
+            this.xpos = (Math.cos(this.theta) * this.speed) + this.xpos;
+            this.ypos = (Math.sin(this.theta) * this.speed) + this.ypos;
+            this.makeBody();
+
+       }
+
         score(){
-        	this.numPoints++;
+            if(this.numPoints < 10){
+                this.numPoints++;   
+                this.makeBody();
+            }
         }
 
-        /**
-         * Decrement score, loose a side
-         */
         dethrone(){
-        	this.numPoints--;
+            if(this.numPoints > 3){
+                this.numPoints--;
+                this.makeBody();
+            }
         }
 
+        makeCorridor(){
+
+            if(this.init){
+                this.two.remove(this.corridor);
+            }
+
+                if(this.theta == Math.PI/2 || this.theta == (3*Math.PI)/2){
+                        this.corridor = this.two.makeLine(this.xpos, this.hmin, this.xpos, this.hmax);
+                        this.corridor.stroke = this.color;
+                }
+                else{
+
+                        //calculate slope
+                        var tan = Math.tan(this.theta);
+                        var b = this.ypos - (this.xpos * tan);
+
+                        //first check agsint left and right walls for intersection
+                        //easier in my head since its x...'
+                        var yC = this.wmin * tan + b;
+                        var yC2 = this.wmax *tan + b;
+
+                        if(yC <= this.hmax && yC >= this.hmin && yC2 <= this.hmax && yC2 >= this.hmin){
+                            this.corridor = this.two.makeLine(this.wmin, yC, this.wmax, yC2);
+                        }
+                        else{
+                            var xC = (this.hmin - b)/tan;
+                            var xC2 = (this.hmax - b)/tan;
+                            this.corridor = this.two.makeLine(xC, this.hmin, xC2, this.hmax);
+
+                        }
+
+                        this.corridor.stroke = this.color;
+
+                }
+
+                
+                
+
+        }
+
+        setTheta(th){
+            this.theta = th;
+            this.makeBody();
+            this.makeCorridor();
+        }
+
+        getTheta(){
+            return this.theta;
+        }
+
+        setX(x){
+            this.xpos = x;
+        }
+
+        setY(y){
+            this.ypos = y;
+        }
+
+        getX(){
+            return this.xpos;
+        }
+
+        getY(){
+            return this.ypos;
+        }
+
+
+
         /**
-         * Draw the player object to the canvas
-         * @param  Canvas c the canvas to draw to
+         * Make the player body.
          */
-        draw(two){
+        makeBody(){
+
+            if(this.init){
+                this.two.remove(this.lines);
+            }
 
         	var points = [];
         	var PI = Math.PI;
@@ -76,6 +233,8 @@ class Player {
 
         	}
 
+            this.lines = [];
+
         	for(i = 0; i < this.numPoints; i++){
         		var k = i + 1;
 
@@ -83,11 +242,9 @@ class Player {
         			k = 0;
         		}
 
-        		var line = two.makeLine(points[i].x, points[i].y, points[k].x, points[k].y);
-        		line.stroke = this.color;
+        		this.lines[i] = this.two.makeLine(points[i].x, points[i].y, points[k].x, points[k].y);
+        		this.lines[i].stroke = this.color;
         	}
-
-
 
 
         }

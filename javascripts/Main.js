@@ -9,12 +9,16 @@ function Main(){
     });
 
     two.appendTo(elem);
-    line = two.makeLine(0, 0, two.width, two.height);
+    var game = new Manatee(two, w, h);
+	
+	//var sound = new Howl({
+	//	urls: ['paniq.mp3'],
+	//	loop: true
+	//})
 
-	//var player1 = new Player(500, 250, 'red', 5, 100, 5);
-	//player1.draw(two);
-
-	two.update();
+	two.bind('update', function(frameCount){
+		game.update();
+	}).play();
 
 }
 
