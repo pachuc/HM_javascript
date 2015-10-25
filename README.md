@@ -1,14 +1,13 @@
 # HM_javascript
 Humanities manatees in javascript
 
-TODO:
+#BUGS:
+Corridor calculation needs to correctly detect wall points
 
-1. controls
-	*beat based controls
-	*collision detection
-	*angle incrementation
-2. animation
-	*corridor
-	*update body on score
-	*update body on heading
-	*2js animationloop
+#TODO:
+Corridor collision detection
+rythm based controls
+
+#Future:
+Implement full netplay (with socketio?)
+
