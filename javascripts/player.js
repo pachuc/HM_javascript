@@ -34,6 +34,7 @@ class Player {
             this.aim = false;
             this.aimTheta = theta;
             this.aimDir = "";
+            this.cor_points = new Array();
 
             this.makeBody();
             this.makeCorridor();
@@ -42,17 +43,19 @@ class Player {
             this.aimrendered = false;
             this.shoot = false;
             this.shootcd = 0;
+
+
                 
 
 	   }
 
        aimShot(){
             if(this.aimDir == "clockwise"){
-                this.aimTheta -= .05;
+                this.aimTheta -= .025;
             }
 
             if(this.aimDir == "counterclockwise"){
-                this.aimTheta += .05;
+                this.aimTheta += .025;
             }
 
             this.drawAim();
@@ -88,8 +91,20 @@ class Player {
 
        }
 
+       shootOnCD(){
+            this.shootcd = 10;
+       }
+       shootCoolingDown(){
+            if(this.shootcd > 0){
+                this.shootcd--;
+            }
+       }
+
        setShoot(){
-            this.shoot = true;
+            if(this.shootcd == 0){
+                this.shoot = true;
+            }
+            
        }
 
        update(){
@@ -100,17 +115,12 @@ class Player {
                 if(this.shoot){
                     this.theta = this.aimTheta;
                     this.shoot = false;
-                    this.shootcd = 100;
                 }
 
             }
             else{
                 this.clearAim();
                 this.aimTheta = this.theta;
-            }
-
-            if(this.shootcd > 0){
-                this.shootcd--;
             }
             
             this.move();
@@ -143,6 +153,10 @@ class Player {
             }
         }
 
+        getCorridor(){
+            return this.cor_points;
+        }
+
         makeCorridor(){
 
             if(this.init){
@@ -152,6 +166,10 @@ class Player {
                 if(this.theta == Math.PI/2 || this.theta == (3*Math.PI)/2){
                         this.corridor = this.two.makeLine(this.xpos, this.hmin, this.xpos, this.hmax);
                         this.corridor.stroke = this.color;
+                        this.cor_points[0] = this.xpos;
+                        this.cor_points[1] = this.hmin;
+                        this.cor_points[2] = this.xpos;
+                        this.cor_points[3] = this.hmax;
                 }
                 else{
 
@@ -243,6 +261,10 @@ class Player {
 
                         this.corridor = this.two.makeLine(x1, y1, x2, y2);
                         this.corridor.stroke = this.color;
+                        this.cor_points[0] = x1;
+                        this.cor_points[1] = y1;
+                        this.cor_points[2] = x2;
+                        this.cor_points[3] = y2;
 
 
                 }

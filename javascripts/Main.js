@@ -1,7 +1,8 @@
 function Main(){
-	w = $('#middle_pane').width();
-	h = $('#middle_pane').height();
+	var w = $('#middle_pane').width();
+	var h = $('#middle_pane').height();
 	var elem = document.getElementById('middle_pane');
+	var FRAMERATE = 60/1000;//60 fps
 
     var two = new Two({
     	width: w,
@@ -10,15 +11,17 @@ function Main(){
 
     two.appendTo(elem);
     var game = new Manatee(two, w, h);
-	
-	//var sound = new Howl({
-	//	urls: ['paniq.mp3'],
-	//	loop: true
-	//})
+
+    var audio = new Audio('paniq.mp3');
+	audio.play();
 
 	two.bind('update', function(frameCount){
-		game.update();
-	}).play();
+		game.update(frameCount);
+	});
+
+	setInterval(function() {
+  		two.update();
+	}, FRAMERATE);
 
 }
 

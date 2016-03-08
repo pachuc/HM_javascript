@@ -18,6 +18,9 @@ class Manatee{
 		this.min_width = game_arena.getArenaWMin();
 		this.total_width = this.max_width - this.min_width;
 		this.total_height = this.max_height - this.min_height;
+		this.speed = .3;
+		this.onBeat = false;
+		this.totalSecs = 0;
 
 		//calculate appropriate player size based on arena area
 		var area = this.total_height * this.total_width;
@@ -32,9 +35,9 @@ class Manatee{
 		this.player2_starting_Y = this.max_height - 100;
 
 		//init players in desired location
-		this.player1 = new Player(this.player1_starting_X, this.player1_starting_Y, 'red', Math.PI/2, player_size, 1, two, 
+		this.player1 = new Player(this.player1_starting_X, this.player1_starting_Y, 'red', Math.PI/2, player_size, this.speed, two, 
 			this.min_height, this.max_height, this.min_width, this.max_width);
-		this.player2 = new Player(this.player2_starting_X, this.player2_starting_Y, 'green', (3*Math.PI)/2, player_size, 1, two, 
+		this.player2 = new Player(this.player2_starting_X, this.player2_starting_Y, 'green', (3*Math.PI)/2, player_size, this.speed, two, 
 			this.min_height, this.max_height, this.min_width, this.max_width);
 
 		
@@ -115,24 +118,96 @@ class Manatee{
 			this.player2.setAim(false, "")
 		}
 
-		if(kd.W.isDown()){
+		if(kd.W.isDown() && this.onBeat){
 			this.player1.setShoot();
+			this.player1.shootOnCD();
+		}
+		else if(kd.W.isDown()){
+			this.player1.shootOnCD();
+		}
+		else{
+			this.player1.shootCoolingDown();
 		}
 
-		if(kd.UP.isDown()){
+		if(kd.UP.isDown() && this.onBeat){
 			this.player2.setShoot();
+			this.player2.shootOnCD();
+		}
+		else if(kd.UP.isDown()){
+			this.player2.shootOnCD();
+		}
+		else{
+			this.player2.shootCoolingDown();
+		}
+
+	}
+	distance(x1, y1, x2, y2){
+		return Math.sqrt(Math.pow((x1 - x2), 2) + Math.pow((y1 - y2), 2))
+	}
+	pointOnCorridor(corridor, x, y, epsilon){
+		//check if this point is on the corridor line segement
+		
+		var x1 = corridor[0];
+		var y1 = corridor[1];
+		var x2 = corridor[2];
+		var y2 = corridor[3];
+
+		//console.log('Checking if point (' + x + ', ' + y + ') is on line: (' + x1 + ', ' + y1 + ') (' + x2 + ', ' + y2 + ')' );
+
+		var cor_dist = this.distance(x1, y1, x2, y2);
+		var total_dist = Math.abs(this.distance(x1, y1, x, y)) + Math.abs(this.distance(x2, y2, x, y));
+		var diff_dist = Math.abs(cor_dist - total_dist);
+		if (diff_dist < epsilon){
+			return true;
+		}
+
+		return false;
+
+
+	}
+	corridorCollisions(){
+		var player1_cor = this.player1.getCorridor();
+		var player2_cor = this.player2.getCorridor();
+		//console.log('Player 1 corridor: ' + player1_cor);
+		//console.log('Player 2 corridor: ' + player2_cor);
+		var p1, p2 = false;
+		var x1 = this.player1.getX();
+		var y1 = this.player1.getY();
+		var x2 = this.player2.getX();
+		var y2 = this.player2.getY();
+
+		p1 = this.pointOnCorridor(player2_cor, x1, y1, 1);
+		p2 = this.pointOnCorridor(player1_cor, x2, y2, 1);
+		
+		if(p1){
+			this.player1.dethrone();
+			this.player2.score();
+		}
+
+		if(p2){
+			this.player2.dethrone();
+			this.player1.score();
+		}
+
+		if(p1 || p2){
+			this.reset();
 		}
 
 	}
 	//update the game state.
-	update(){
+	update(frameCount){
 
-		//var current = this.player1.getTheta();
-		//this.player1.setTheta(current + 0.1);
-		//current = this.player2.getTheta();
-		//this.player2.setTheta(current + 0.1);
-		//
-		//
+		this.totalSecs = 1.0 * frameCount/60.0;
+		var interval = this.totalSecs % .444;
+
+		console.log('The total seconds is: ' + this.totalSecs + '. Interval is: ' + interval);
+
+		if(interval <= 0.17 || interval >= .274){
+			this.onBeat = true;
+		}
+		else{
+			this.onBeat = false;
+		}
 		
 		//check controls
 		this.checkControls();
@@ -141,20 +216,7 @@ class Manatee{
 		this.player2.update();
 
 		this.outofbounds();
-		
-		
-		//move players forward
-		//check control input
-		//
-		//successful launch?
-		//if so update corridor and heading.
-		//
-		//check collisions
-		//player to corridor and stage
-		//did a player die?
-		//reset player positions
-		//update player score
-		//
+		this.corridorCollisions();
 
 	}
 }
